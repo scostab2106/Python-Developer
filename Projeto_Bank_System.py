@@ -14,6 +14,17 @@
 # - Devem ser exibidos utilizando o formato  R$ xxx.xx
 
 
+#TIME
+# - Estabelecer um limite de 10 transações diárias para uma conta
+# - Se o Usuário tentar fazer uma transação após atingir o limite, deve ser informado que ele axcedeu o número de transações permitidas para aquele dia
+# - Mostra no extrato, a data e hora de todas as transações.
+
+from datetime import date, datetime, time
+
+date_save = datetime.date()
+
+
+
 menu = """
 [D] - Deposit
 [W] - Withdraw
@@ -27,81 +38,121 @@ limit = 500.00
 extract = ""
 number_of_withdraw = 0
 WITHDRAW_LIMIT = 3
+number_transations = 0
+
+
+
+
+    
+def deposit(): 
+        date_d = datetime.date()
+
+        if date_d == date_save and number_transations >= 10:
+            print("Number of transitions exceded!")
+            return
+
+        else:        
+            print("DEPOSIT...")
+
+            deposit = float(input("Enter the deposit value: "))
+
+            if deposit > 0: 
+                balance = balance + deposit
+                number_transations = number_transations + 1
+                date_save = datetime.now()
+                date_ptbr = date_save.strftime("%d/%m/%Y %H:%M")
+                date_transation = str(date_ptbr)
+                extract = f"{date_transation}  " f"{extract}" + str(f"\n+ R${deposit} ")
+                return
+
+            else:
+                deposit = float(input("Invalid value, please write value big than 0: "))
+                balance = balance + deposit
+                number_transations = number_transations + 1
+                date_save = datetime.now()
+                date_ptbr = date_save.strftime("%d/%m/%Y %H:%M")
+                date_transation = str(date_ptbr)
+                extract = f"{date_transation} " f"{extract}" + str(f"\n+ R${deposit} ")
+                
+
+                if deposit <= 0:
+                    print("Invalid value, backing to menu...")
+                    return
+                else:
+                    return
+    
+
+def withdraw():
+        print("WITHDRAW...")
+
+        date_d = datetime.date()
+
+        if date_d == date_save and number_transations >= 10:
+            print("Number of transitions exceded!")
+            return
+
+        else:
+            withdraw = -1
+
+            while withdraw < balance:
+
+                withdraw = float(input("Enter the withdraw value: "))
+                if withdraw > balance:
+                    print("Insuficient Balance...")
+                    return
+
+                elif withdraw > 500:
+                    print("Withdraw out of limit...")
+                    return
+
+                else:
+                    number_of_withdraw = number_of_withdraw +  1
+
+                    if number_of_withdraw > WITHDRAW_LIMIT:
+                        print("Daily limit exceded, come back tomorrow...")
+                        break
+
+                    balance = balance - withdraw
+                    date_save = datetime.now()
+                    date_ptbr = date_save.strftime("%d/%m/%Y %H:%M")
+                    date_transation = str(date_ptbr)
+                    extract = f"{date_transation}  "  f"{extract}" + str(f"\n- R${withdraw} ")
+                    number_transations = number_transations + 1
+                    break
+            return
+
+
+def show_extract(extract):
+        print("\nEXTRACT... \n" )        
+        
+        return print(extract + f"\nTOTAL DA CONTA = R${balance}")
+
 
 while True:
 
     option = input(menu)
 
-
     if option.upper() == 'D' :
-        print("DEPOSIT...")
-
-        deposit = float(input("Enter the deposit value: "))
-
-        if deposit > 0:
-            balance = balance + deposit
-            extract = f"{extract}" + str(f"\n+R${deposit}")
-            continue
-
-        else:
-            deposit = float(input("Invalid value, please write value big than 0: "))
-            balance = balance + deposit
-            extract = f"{extract}" + str(f"\n+R${deposit}")
-
-            if deposit <= 0:
-                print("Invalid value, backing to menu...")
-                continue
-            else:
-                continue
-
-
+        deposit()
+       
     elif option.upper() == 'W':
-        print("WITHDRAW...")
-
-        withdraw = -1
-
-        while withdraw < balance:
-
-            withdraw = float(input("Enter the withdraw value: "))
-            if withdraw > balance:
-                print("Insuficient Balance...")
-                continue
-
-            elif withdraw > 500:
-                print("Withdraw out of limit...")
-                continue
-
-            else:
-                number_of_withdraw = number_of_withdraw +  1
-
-                if number_of_withdraw > WITHDRAW_LIMIT:
-                    print("Daily limit exceded, come back tomorrow...")
-                    break
-
-                balance = balance - withdraw
-                extract = f"{extract}" + str(f"\n-R${withdraw}")
-                break
-        continue
-
-
-
-
-
+        withdraw()
+      
     elif option.upper() == 'E':
-        print("EXTRACT...")
-
-        print(extract)
-        print(f"\nTOTAL DA CONTA = R${balance}")
-        continue
-
+        show_extract()
     elif option.upper() == 'X':
-
         print("LEAVE PROGRAM!")
         break
-
-
     else:
-
         print("WRITE A CORRECT OPTION: ")
-
         continue
+
+
+   
+    
+    
+
+   
+
+
+    
