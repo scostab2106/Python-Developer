@@ -19,13 +19,23 @@
 # - Se o Usuário tentar fazer uma transação após atingir o limite, deve ser informado que ele axcedeu o número de transações permitidas para aquele dia
 # - Mostra no extrato, a data e hora de todas as transações.
 
+#FUNÇÕES
+# - Criar 2 novas funções "Cadastrar usuario" e "Cadastrar conta bancária"
+# - Cadastrar Usuário: Armazenar numa lista(nome, data de nascimento, cpf(único) e edereço(logradouro, num - bairro - cidade/sigla estado))
+# - Criar Conta: Armazenar numa lista(agencia(fixo = "0001"), numero da conta e usuário) 
+# - Saque: Argumentos Keyword only -> (saldo, valor, extrato, limit, numero_saques, limite_saques) - Retorno -> (saldo e extrato)
+# - Depósito: Argumentos Positional only -> (saldo, valor, extrato) - Retorno -> (sado e extrato)
+# - Extrato: Positional and Keyword ->  Posicionais(saldo) Nomeados(extrato)
+
 from datetime import date, datetime, time
 
-date_save = datetime.date()
+date_save = datetime.now().date
 
 
 
 menu = """
+[U] - Create User
+[C] - Create account
 [D] - Deposit
 [W] - Withdraw
 [E] - Extract
@@ -39,112 +49,145 @@ extract = ""
 number_of_withdraw = 0
 WITHDRAW_LIMIT = 3
 number_transations = 0
-
+users = []
+accs = []
 
 
 
     
-def deposit(): 
-        date_d = datetime.date()
+def deposit(balance, value, extract, number_transations, / ): 
+        global date_save
+        date_d = datetime.now().date
 
-        if date_d == date_save and number_transations >= 10:
+        if date_d != date_save:
+            number_transations = 0  
+            date_save = date_d
+
+        if number_transations >= 10:
             print("Number of transitions exceded!")
-            return
+            return 
 
-        else:        
-            print("DEPOSIT...")
+              
 
-            deposit = float(input("Enter the deposit value: "))
-
-            if deposit > 0: 
-                balance = balance + deposit
-                number_transations = number_transations + 1
-                date_save = datetime.now()
-                date_ptbr = date_save.strftime("%d/%m/%Y %H:%M")
-                date_transation = str(date_ptbr)
-                extract = f"{date_transation}  " f"{extract}" + str(f"\n+ R${deposit} ")
-                return
-
-            else:
-                deposit = float(input("Invalid value, please write value big than 0: "))
-                balance = balance + deposit
-                number_transations = number_transations + 1
-                date_save = datetime.now()
-                date_ptbr = date_save.strftime("%d/%m/%Y %H:%M")
-                date_transation = str(date_ptbr)
-                extract = f"{date_transation} " f"{extract}" + str(f"\n+ R${deposit} ")
+        if value > 0: 
+            balance += value
+            number_transations += 1
+            date_save = datetime.now().date()
+            date_transation = datetime.now().strftime("%d/%m/%Y %H:%M")
+            extract = f"{date_transation}  " f"{extract}" + str(f"\n+ R${value} ")
                 
 
-                if deposit <= 0:
-                    print("Invalid value, backing to menu...")
-                    return
-                else:
-                    return
-    
-
-def withdraw():
-        print("WITHDRAW...")
-
-        date_d = datetime.date()
-
-        if date_d == date_save and number_transations >= 10:
-            print("Number of transitions exceded!")
-            return
-
         else:
-            withdraw = -1
+            print("Invalid value, deposit should must be bigger than 0, backing to menu...")     
 
-            while withdraw < balance:
-
-                withdraw = float(input("Enter the withdraw value: "))
-                if withdraw > balance:
-                    print("Insuficient Balance...")
-                    return
-
-                elif withdraw > 500:
-                    print("Withdraw out of limit...")
-                    return
-
-                else:
-                    number_of_withdraw = number_of_withdraw +  1
-
-                    if number_of_withdraw > WITHDRAW_LIMIT:
-                        print("Daily limit exceded, come back tomorrow...")
-                        break
-
-                    balance = balance - withdraw
-                    date_save = datetime.now()
-                    date_ptbr = date_save.strftime("%d/%m/%Y %H:%M")
-                    date_transation = str(date_ptbr)
-                    extract = f"{date_transation}  "  f"{extract}" + str(f"\n- R${withdraw} ")
-                    number_transations = number_transations + 1
-                    break
-            return
+        return balance, extract, number_transations              
+            
 
 
-def show_extract(extract):
-        print("\nEXTRACT... \n" )        
+def withdraw(*, balance, value, extract, number_transations, number_of_withdraw , WITHDRAW_LIMIT):
+    global date_save    
+
+    date_d = datetime.now().date
+
+    if date_d != date_save:
+        number_transations = 0  
+        number_of_withdraw = 0  
+        date_save = date_d
+
+    if  number_transations >= 10:
+        print("Number of transitions exceded!")
+        return
+    
+    if number_of_withdraw > WITHDRAW_LIMIT:
+        print("Daily limit exceded, come back tomorrow...")
+        return
+
+    if value > balance:
+        print("Insuficient Balance...")
+        return
         
-        return print(extract + f"\nTOTAL DA CONTA = R${balance}")
+    if value > 500:
+        print("Withdraw out of limit...")
+        return
+
+    
+    balance -= value
+    number_of_withdraw += 1
+    number_transations += 1
+    date_transation = datetime.now().strftime("%d/%m/%Y %H:%M")
+    extract = f"{date_transation}  "  f"{extract}" + str(f"\n- R${value} ")
+            
+    return balance, extract, number_transations, number_of_withdraw
+
+def show_extract(balance,*, extract):
+    print("\nEXTRACT... \n" )
+    print(extract if extract else "No transactions yet.")            
+    print(extract + f"\nTOTAL ACCOUNT = R${balance}")
+
+def create_acc():
+    cpf = input("CPF: ")
+    if cpf in accs:
+        print("User already have account!")
+        return
+              
+    agency = '0001'
+    account_number = len(accs) + 1  
+    
+    accs.append([cpf,agency,account_number])
+    print("Account created successfully!")
+
+
+    return
+
+def create_user():
+    name = input("Name: ") 
+    birt = input("Birthday (DD/MM/YYYY): ")
+    cpf = input("CPF: ")
+
+    for user in users:
+        if  cpf == user[2]:
+            print("User already registered!")
+            return
+              
+    address = f"{input("Place: ")},{int(input("Number: "))} - {input("Neighborhood: ")} - {input("City: ")}/{input("State(UF): ")}"
+
+    users.append([name, birt,cpf,address])
+    print("User registered successfully!")
 
 
 while True:
 
-    option = input(menu)
+    option = input(menu).strip().upper()
 
-    if option.upper() == 'D' :
-        deposit()
+    if option == 'D' :
+        print("DEPOSIT...")
+        value = float(input("Enter the deposit value: "))
+        balance, extract, number_transations = deposit(balance, value, extract, number_transations)
        
-    elif option.upper() == 'W':
-        withdraw()
+    elif option == 'W':
+        print("WITHDRAW...")
+        balance, extract, number_transations, number_of_withdraw = withdraw(
+            balance = balance, 
+            value = float(input("Enter the withdraw value: ")), 
+            extract = extract, 
+            number_transations = number_transations, 
+            number_of_withdraw = number_of_withdraw, 
+            WITHDRAW_LIMIT = WITHDRAW_LIMIT)
       
-    elif option.upper() == 'E':
-        show_extract()
-    elif option.upper() == 'X':
+    elif option == 'E':
+        show_extract(balance, extract = extract)
+
+    elif option == 'U':
+        create_user()
+
+    elif option == 'C':
+        create_acc()
+
+    elif option == 'X':
         print("LEAVE PROGRAM!")
         break
     else:
-        print("WRITE A CORRECT OPTION: ")
+        print("CHOSE A CORRECT OPTION: ")
         continue
 
 
