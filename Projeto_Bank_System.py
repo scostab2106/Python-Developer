@@ -27,7 +27,9 @@
 # - Depósito: Argumentos Positional only -> (saldo, valor, extrato) - Retorno -> (sado e extrato)
 # - Extrato: Positional and Keyword ->  Posicionais(saldo) Nomeados(extrato)
 
-from datetime import date, datetime, time
+from datetime import datetime
+
+from abc import ABC, abstractmethod
 
 date_save = datetime.now().date
 
@@ -43,116 +45,252 @@ menu = """
 
 => """
 
-balance = 0.00
-limit = 500.00
+
 extract = ""
-number_of_withdraw = 0
-WITHDRAW_LIMIT = 3
-number_transations = 0
-users = []
-accs = []
 
 
+class Account:
+    def __init__(self, number, client):
 
+        self._balance = 0
+        self._number = number
+        self._agency = '0001'
+        self._client = client
+        self._history = History()
+
+
+    @property
+    def balance(self):
+
+        return self._balance
+
+    @property
+    def number(self):
+
+        return self._number
     
-def deposit(balance, value, extract, number_transations, / ): 
+    @property
+    def agency(self):
+        return self._agency
+    
+    @property
+    def client(self):
+        return self._client
+    
+    @property
+    def history(self):
+        return self._history
+
+    @classmethod
+    def new_account(cls, client, number):
+
+        return cls(number, client)
+
+
+    def withdraw(self, value):
+        balance = self.balance
+        exceeded_balance = value > balance
+
+        if exceeded_balance:
+            print("Insuficient Balance!")
+            return False
+
+        elif value > 0:
+            self._saldo -= value
+            print("Seccess!")
+            return True
+        
+        else: 
+            print("Invalid Value!")
+            return False
+   
+
+
+    def deposit(self, value): 
+        
+            
+        if value > 0:
+            self._saldo += value
+            print("Success!")
+            
+        else:
+            print("Invalid Value!")
+            return False
+        
+        return True
+      
+            
+class Corrent_Account(Account):
+    def __init__(self, number, client, limit = 500, withdraw_limit = 3):
+        super().__init__(number, client)
+
+        self.limit = limit
+        self.withdraw_limit = withdraw_limit
+    
+    def withdraw(self, value):
+
+        global date_save 
+        
+        number_of_withdraw = len([transation for transation in self.history.transations if transation["type"] == Withdraw.__name__])
+        
+        
+        date_d = datetime.now().date
+
+        if date_d != date_save:
+            number_transations = 0  
+            number_of_withdraw = 0  
+            date_save = date_d
+
+        if  number_transations >= 10:
+            print("Number of transitions exceded!")
+            return False
+        
+        elif number_of_withdraw > self.withdraw_limit :
+            print("Daily limit exceded, come back tomorrow...")
+            return False
+
+        elif value > balance:
+            print("Insuficient Balance...")
+            return False
+            
+        elif value > 500:
+            print("Withdraw out of limit...")
+            return False
+        
+        else:
+            self._balance -= value
+            number_of_withdraw += 1
+            number_transations += 1
+            date_transation = datetime.now().strftime("%d/%m/%Y %H:%M")
+            extract = f"{date_transation}  "  f"{extract}" + str(f"\n- R${value} ")
+                          
+            print("Success!")
+            return super().withdraw(value), extract
+        
+
+    def deposit(self, value): 
+        
+            
         global date_save
         date_d = datetime.now().date
 
+            
         if date_d != date_save:
             number_transations = 0  
             date_save = date_d
 
         if number_transations >= 10:
-            print("Number of transitions exceded!")
-            return 
-
-              
-
+                print("Number of transitions exceded!")
+                return False
+                
         if value > 0: 
-            balance += value
+            self._balance += value
             number_transations += 1
             date_save = datetime.now().date()
             date_transation = datetime.now().strftime("%d/%m/%Y %H:%M")
             extract = f"{date_transation}  " f"{extract}" + str(f"\n+ R${value} ")
-                
+            print("Success!")
+            return super().deposit(value), extract
+                    
 
         else:
             print("Invalid value, deposit should must be bigger than 0, backing to menu...")     
-
-        return balance, extract, number_transations              
-            
+            return False
 
 
-def withdraw(*, balance, value, extract, number_transations, number_of_withdraw , WITHDRAW_LIMIT):
-    global date_save    
+class Client:
+    def __init__(self, address):
 
-    date_d = datetime.now().date
-
-    if date_d != date_save:
-        number_transations = 0  
-        number_of_withdraw = 0  
-        date_save = date_d
-
-    if  number_transations >= 10:
-        print("Number of transitions exceded!")
-        return
-    
-    if number_of_withdraw > WITHDRAW_LIMIT:
-        print("Daily limit exceded, come back tomorrow...")
-        return
-
-    if value > balance:
-        print("Insuficient Balance...")
-        return
+        self.address = address
+        self.accounts = []
         
-    if value > 500:
-        print("Withdraw out of limit...")
-        return
+    def make_transation(self, account, transation):
+        transation.register(account)
+        
 
+    def add_account(self, account):
+        self.accounts.append(account)
+        
+
+class FisicPerson(Client):
+    def __init__(self, name, birthday, cpf, address):
+
+        super().__init__(address)
+        self.name = name
+        self.birthday = birthday
+        self.cpf = cpf
+
+
+class History:
+    def __init__(self):
+        self._transations = [] 
+
+
+    @property
+    def transations(self):
+        return self._transations
     
-    balance -= value
-    number_of_withdraw += 1
-    number_transations += 1
-    date_transation = datetime.now().strftime("%d/%m/%Y %H:%M")
-    extract = f"{date_transation}  "  f"{extract}" + str(f"\n- R${value} ")
-            
-    return balance, extract, number_transations, number_of_withdraw
+
+    def add_transations(self, transation):
+        self._transations.append(
+
+        {    
+        "Type": transation.__class__.__name__,
+        "Value": transation.value,
+        "Date": datetime.now().strftime("%d/%m/%Y %H:%M:%s"),
+        }
+    )
+
+
+class Transation(ABC):
+
+    @property
+
+    @abstractmethod
+
+    def value(self):
+        pass
+
+    @abstractmethod
+
+    def register(self, account):
+        pass
+
+
+class Withdraw(Transation):
+    def __init__(self, value):
+        self._value = value
+
+    @property
+    def value(self):
+        return self.value
+    
+    def register(self, account):
+        transation_success = account.withdraw(self.value)
+
+        if transation_success:
+            account.history.add_transation(self)
+
+
+class Deposit(Transation):
+
+    @property
+    def value(self):
+        return self.value
+    
+    def register(self, account):
+        transation_success = account.deposit(self.value)
+
+        if transation_success:
+            account.history.add_transation(self)
+
+        
+
 
 def show_extract(balance,*, extract):
     print("\nEXTRACT... \n" )
     print(extract if extract else "No transactions yet.")            
     print(extract + f"\nTOTAL ACCOUNT = R${balance}")
-
-def create_acc():
-    cpf = input("CPF: ")
-    if cpf in accs:
-        print("User already have account!")
-        return
-              
-    agency = '0001'
-    account_number = len(accs) + 1  
-    
-    accs.append([cpf,agency,account_number])
-    print("Account created successfully!")
-
-
-    return
-
-def create_user():
-    name = input("Name: ") 
-    birt = input("Birthday (DD/MM/YYYY): ")
-    cpf = input("CPF: ")
-
-    for user in users:
-        if  cpf == user[2]:
-            print("User already registered!")
-            return
-              
-    address = f"{input("Place: ")},{int(input("Number: "))} - {input("Neighborhood: ")} - {input("City: ")}/{input("State(UF): ")}"
-
-    users.append([name, birt,cpf,address])
-    print("User registered successfully!")
 
 
 while True:
